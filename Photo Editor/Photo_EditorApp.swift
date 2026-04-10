@@ -2,7 +2,7 @@
 //  Photo_EditorApp.swift
 //  Photo Editor
 //
-//  Created by 刘明浩 on 2026/4/8.
+//  Created by 刘明浩 on 2026/4/4.
 //
 
 import SwiftUI
