@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 class MainViewModel: ObservableObject {
     @Published var photos: [PhotoModel] = []

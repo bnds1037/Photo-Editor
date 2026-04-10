@@ -45,34 +45,3 @@ struct AlbumView: View {
     }
 }
 
-struct AlbumCard: View {
-    let album: AlbumModel
-    let viewModel: AlbumViewModel
-    
-    var body: some View {
-        VStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.blue.opacity(0.2))
-                .frame(width: 220, height: 180)
-                .overlay {
-                    Text(album.name)
-                        .foregroundColor(.gray)
-                }
-            Text(album.name)
-                .font(.caption)
-                .padding(.top, 8)
-            Text("\(viewModel.getPhotosInAlbum(albumID: album.id).count) photos")
-                .font(.caption2)
-                .foregroundColor(.gray)
-        }
-        .background(
-            Color.clear
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        )
-        .padding(4)
-        .onTapGesture {
-            viewModel.selectAlbum(album: album)
-        }
-    }
-}

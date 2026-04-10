@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Vision
+import Combine
 
 class SmartViewModel: ObservableObject {
     @Published var searchResults: [PhotoModel] = []

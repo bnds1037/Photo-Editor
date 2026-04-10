@@ -177,20 +177,25 @@ struct PhotosView: View {
             
             // 照片网格
             ScrollView {
-                if viewModel.isGridView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 300))], spacing: 20) {
-                        ForEach(viewModel.searchPhotos()) { photo in
-                            PhotoCard(photo: photo)
-                        }
-                    }
-                } else {
-                    VStack(spacing: 10) {
-                        ForEach(viewModel.searchPhotos()) { photo in
-                            PhotoRow(photo: photo)
-                        }
-                    }
+                photosView()
+                    .padding()
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private func photosView() -> some View {
+        if viewModel.isGridView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 300))], spacing: 20) {
+                ForEach(viewModel.searchPhotos()) { photo in
+                    PhotoCard(photo: photo)
                 }
-                .padding()
+            }
+        } else {
+            VStack(spacing: 10) {
+                ForEach(viewModel.searchPhotos()) { photo in
+                    PhotoRow(photo: photo)
+                }
             }
         }
     }

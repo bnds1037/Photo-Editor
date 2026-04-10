@@ -15,7 +15,7 @@ class ColorUtils {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int = UInt64()
         Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b:
+        let a, r, g, b: Double
         if hex.count == 8 {
             a = Double((int >> 24) & 0xFF) / 255
             r = Double((int >> 16) & 0xFF) / 255
@@ -31,23 +31,23 @@ class ColorUtils {
     }
     
     static func colorToHex(color: Color) -> String {
-        let uiColor = UIColor(color)
+        let nsColor = NSColor(color)
         var r: CGFloat = 0
         var g: CGFloat = 0
         var b: CGFloat = 0
         var a: CGFloat = 0
-        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        nsColor.getRed(&r, green: &g, blue: &b, alpha: &a)
         let hex = String(format: "%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
         return hex
     }
     
     static func adjustBrightness(color: Color, amount: CGFloat) -> Color {
-        let uiColor = UIColor(color)
+        let nsColor = NSColor(color)
         var r: CGFloat = 0
         var g: CGFloat = 0
         var b: CGFloat = 0
         var a: CGFloat = 0
-        uiColor.getRed(&r, green: &g, blue: &b, alpha: &a)
+        nsColor.getRed(&r, green: &g, blue: &b, alpha: &a)
         return Color(red: min(1.0, max(0.0, r + amount)), green: min(1.0, max(0.0, g + amount)), blue: min(1.0, max(0.0, b + amount)), opacity: a)
     }
 }

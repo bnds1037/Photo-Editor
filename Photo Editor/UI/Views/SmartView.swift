@@ -143,30 +143,7 @@ struct SmartView: View {
     }
 }
 
-struct PhotoCard: View {
-    let photo: PhotoModel
-    
-    var body: some View {
-        VStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 220, height: 180)
-                .overlay {
-                    Text("Photo")
-                        .foregroundColor(.gray)
-                }
-            Text(photo.createDate.formatted(date: .abbreviated, time: .shortened))
-                .font(.caption)
-                .padding(.top, 8)
-        }
-        .background(
-            Color.clear
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        )
-        .padding(4)
-    }
-}
+
 
 struct PhotoThumbnail: View {
     let photo: PhotoModel

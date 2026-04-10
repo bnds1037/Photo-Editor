@@ -120,14 +120,14 @@ struct LargePhotoWidgetView: View {
             Text("Photo Master")
                 .font(.headline)
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 10) {
-                ForEach(1..<5, id: \.self) {
+                ForEach(1..<5, id: \.self) { index in
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.gray.opacity(0.2))
                         .frame(width: 100, height: 100)
-                        .overlay {
-                            Text("Photo \($0)")
+                        .overlay(
+                            Text("Photo \(index)")
                                 .foregroundColor(.gray)
-                        }
+                        )
                 }
             }
             HStack {

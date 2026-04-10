@@ -1,5 +1,6 @@
 import Foundation
 import CoreData
+import Combine
 
 class DataManager: ObservableObject {
     @Published var photos: [PhotoModel] = []

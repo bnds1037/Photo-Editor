@@ -126,18 +126,4 @@ struct BatchOperateView: View {
     }
 }
 
-struct PhotoThumbnail: View {
-    let photo: PhotoModel
-    
-    var body: some View {
-        VStack {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 120, height: 100)
-                .overlay {
-                    Text("Photo")
-                        .foregroundColor(.gray)
-                }
-        }
-    }
-}
+

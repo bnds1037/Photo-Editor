@@ -1,7 +1,6 @@
 import SwiftUI
 import WidgetKit
 
-@main
 struct PhotoMasterWidgets: WidgetBundle {
     var body: some Widget {
         PhotoWidget()

@@ -1,16 +1,17 @@
 import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import AppKit
 
 struct EditView: View {
     @EnvironmentObject private var dataManager: DataManager
     @StateObject private var viewModel: EditViewModel
     
-    let image: UIImage
+    let image: NSImage
     
-    init(image: UIImage) {
+    init(image: NSImage) {
         self.image = image
-        let ciImage = CIImage(image: image) ?? CIImage()
+        let ciImage = CIImage(data: image.tiffRepresentation ?? Data()) ?? CIImage()
         let dataManager = DataManager()
         self._viewModel = StateObject(wrappedValue: EditViewModel(dataManager: dataManager, image: ciImage))
     }
@@ -85,7 +86,7 @@ struct EditView: View {
                 
                 // 中间预览区域
                 VStack {
-                    Image(uiImage: image)
+                    Image(nsImage: image)
                         .resizable()
                         .scaledToFit()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)

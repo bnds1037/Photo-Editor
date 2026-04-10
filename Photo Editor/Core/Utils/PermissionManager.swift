@@ -26,9 +26,10 @@ class PermissionManager {
     
     func requestLocationPermission() async -> Bool {
         return await withCheckedContinuation { continuation in
-            CLLocationManager().requestWhenInUseAuthorization()
+            let locationManager = CLLocationManager()
+            // macOS doesn't require explicit authorization request for location
             let status = CLLocationManager.authorizationStatus()
-            continuation.resume(returning: status == .authorizedWhenInUse || status == .authorizedAlways)
+            continuation.resume(returning: status == .authorized)
         }
     }
     
@@ -44,6 +45,6 @@ class PermissionManager {
     
     func checkLocationPermission() -> Bool {
         let status = CLLocationManager.authorizationStatus()
-        return status == .authorizedWhenInUse || status == .authorizedAlways
+        return status == .authorized
     }
 }

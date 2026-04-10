@@ -53,23 +53,23 @@ class SmartService {
         }
     }
     
-    func detectBlur(image: CGImage, completion: @escaping (Bool) -> Void) {
-        let request = VNDetectBlurRequest {(request, error) in
-            guard let result = request.results?.first as? VNBlurObservation else {
-                completion(false)
-                return
-            }
-            completion(result.value > 0.5)
-        }
-        
-        let handler = VNImageRequestHandler(cgImage: image)
-        do {
-            try handler.perform([request])
-        } catch {
-            print("Failed to detect blur: \(error)")
-            completion(false)
-        }
-    }
+    // func detectBlur(image: CGImage, completion: @escaping (Bool) -> Void) {
+    //     let request = VNDetectBlurRequest {(request, error) in
+    //         guard let result = request.results?.first as? VNBlurObservation else {
+    //             completion(false)
+    //             return
+    //         }
+    //         completion(result.value > 0.5)
+    //     }
+    //     
+    //     let handler = VNImageRequestHandler(cgImage: image)
+    //     do {
+    //         try handler.perform([request])
+    //     } catch {
+    //         print("Failed to detect blur: \(error)")
+    //         completion(false)
+    //     }
+    // }
     
     func detectDuplicates() -> [(PhotoModel, PhotoModel)] {
         var duplicates: [(PhotoModel, PhotoModel)] = []
