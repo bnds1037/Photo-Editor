@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import AppKit
+internal import UniformTypeIdentifiers
 
 struct ContentView: View {
     @StateObject private var dataManager = DataManager()
@@ -80,7 +82,7 @@ struct ContentView: View {
                 case .albums:
                     AlbumsView(viewModel: albumViewModel)
                 case .moment:
-                    MomentView()
+                    MomentView(favoritePhotos: mainViewModel.photos.filter { $0.isFavorite })
                 case .dashboard:
                     DashboardView(viewModel: smartViewModel)
                 }
@@ -161,6 +163,10 @@ struct PhotosView: View {
                 Text("Photos")
                     .font(.headline)
                 Spacer()
+                Button(action: { uploadPhotos() }) {
+                    Image(systemName: "plus")
+                    Text("Upload")
+                }
                 Button(action: { viewModel.toggleView() }) {
                     Image(systemName: viewModel.isGridView ? "list.bullet" : "square.grid.2x2")
                 }
@@ -188,14 +194,28 @@ struct PhotosView: View {
         if viewModel.isGridView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 300))], spacing: 20) {
                 ForEach(viewModel.searchPhotos()) { photo in
-                    PhotoCard(photo: photo)
+                    PhotoCard(photo: photo, onToggleFavorite: { viewModel.toggleFavorite(photo: $0) })
                 }
             }
         } else {
             VStack(spacing: 10) {
                 ForEach(viewModel.searchPhotos()) { photo in
-                    PhotoRow(photo: photo)
+                    PhotoRow(photo: photo, onToggleFavorite: { viewModel.toggleFavorite(photo: $0) })
                 }
+            }
+        }
+    }
+    
+    private func uploadPhotos() {
+        let openPanel = NSOpenPanel()
+        openPanel.allowedContentTypes = [.image]
+        openPanel.allowsMultipleSelection = true
+        openPanel.canChooseDirectories = false
+        openPanel.canChooseFiles = true
+        
+        openPanel.begin { result in
+            if result == .OK {
+                viewModel.uploadPhotos(from: openPanel.urls)
             }
         }
     }
@@ -204,16 +224,42 @@ struct PhotosView: View {
 // 照片卡片
 struct PhotoCard: View {
     let photo: PhotoModel
+    let onToggleFavorite: (PhotoModel) -> Void
     
     var body: some View {
         VStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 220, height: 180)
-                .overlay {
-                    Text("Photo")
-                        .foregroundColor(.gray)
+            if let nsImage = NSImage(data: photo.imageData) {
+                ZStack {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 220, height: 180)
+                        .clipped()
+                        .cornerRadius(8)
+                    HStack {
+                        Spacer()
+                        VStack {
+                            Button(action: { onToggleFavorite(photo) }) {
+                                Image(systemName: photo.isFavorite ? "heart.fill" : "heart")
+                                    .foregroundColor(photo.isFavorite ? .red : .white)
+                                    .padding(8)
+                                    .background(Color.black.opacity(0.5))
+                                    .clipShape(Circle())
+                            }
+                            Spacer()
+                        }
+                    }
+                    .padding(8)
                 }
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 220, height: 180)
+                    .overlay {
+                        Text("No Image")
+                            .foregroundColor(.gray)
+                    }
+            }
             Text(photo.createDate.formatted(date: .abbreviated, time: .shortened))
                 .font(.caption)
                 .padding(.top, 8)
@@ -231,16 +277,36 @@ struct PhotoCard: View {
 // 照片行
 struct PhotoRow: View {
     let photo: PhotoModel
+    let onToggleFavorite: (PhotoModel) -> Void
     
     var body: some View {
         HStack {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 80, height: 60)
-                .overlay {
-                    Text("Photo")
-                        .foregroundColor(.gray)
+            if let nsImage = NSImage(data: photo.imageData) {
+                ZStack {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 80, height: 60)
+                        .clipped()
+                        .cornerRadius(4)
+                    Button(action: { onToggleFavorite(photo) }) {
+                        Image(systemName: photo.isFavorite ? "heart.fill" : "heart")
+                            .foregroundColor(photo.isFavorite ? .red : .white)
+                            .padding(4)
+                            .background(Color.black.opacity(0.5))
+                            .clipShape(Circle())
+                    }
+                    .padding(4)
                 }
+            } else {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 80, height: 60)
+                    .overlay {
+                        Text("No Image")
+                            .foregroundColor(.gray)
+                    }
+            }
             VStack(alignment: .leading) {
                 Text(photo.createDate.formatted(date: .abbreviated, time: .shortened))
                     .font(.body)
@@ -254,6 +320,10 @@ struct PhotoRow: View {
                     .foregroundColor(.gray)
             }
             Spacer()
+            Button(action: { onToggleFavorite(photo) }) {
+                Image(systemName: photo.isFavorite ? "heart.fill" : "heart")
+                    .foregroundColor(photo.isFavorite ? .red : .gray)
+            }
         }
         .padding()
         .background(
@@ -361,9 +431,9 @@ struct DashboardView: View {
                 VStack(spacing: 20) {
                     // 统计卡片
                     HStack(spacing: 20) {
-                        StatCard(title: "Total Photos", value: "1,248")
-                        StatCard(title: "Total Albums", value: "24")
-                        StatCard(title: "Favorites", value: "156")
+                        StatCard(title: "Total Photos", value: "\(viewModel.getTotalPhotos())")
+                        StatCard(title: "Total Albums", value: "\(viewModel.getTotalAlbums())")
+                        StatCard(title: "Favorites", value: "\(viewModel.getFavoritesCount())")
                     }
                     
                     // 最近活动
@@ -371,8 +441,15 @@ struct DashboardView: View {
                         Text("Recent Activity")
                             .font(.headline)
                             .padding(.bottom, 10)
-                        ForEach(1...5, id: \.self) {
-                            ActivityItem(number: $0)
+                        if viewModel.getTotalPhotos() == 0 {
+                            Text("No activity yet. Upload photos to get started.")
+                                .foregroundColor(.gray)
+                                .padding()
+                        } else {
+                            // 这里简化处理，实际应该显示真实的活动记录
+                            Text("Recent activity will appear here")
+                                .foregroundColor(.gray)
+                                .padding()
                         }
                     }
                     .padding()
@@ -466,7 +543,15 @@ struct ActivityItem: View {
 // Moment视图 - 随机展示收藏的照片
 struct MomentView: View {
     @State private var currentPhotoIndex = 0
-    @State private var favoritesPhotos = [1, 2, 3, 5, 8, 10, 12] // 模拟收藏的照片索引
+    @State private var favoritePhotos: [PhotoModel]
+    
+    init(favoritePhotos: [PhotoModel]) {
+        self.favoritePhotos = favoritePhotos
+        // 如果有收藏照片，随机选择一个起始索引
+        if !favoritePhotos.isEmpty {
+            self._currentPhotoIndex = State(initialValue: Int.random(in: 0..<favoritePhotos.count))
+        }
+    }
     
     var body: some View {
         VStack {
@@ -490,97 +575,132 @@ struct MomentView: View {
             Spacer()
             
             // 大尺寸照片展示
-            VStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(width: 500, height: 350)
-                    .overlay {
-                        Text("Favorite Photo \(favoritesPhotos[currentPhotoIndex])")
-                            .foregroundColor(.gray)
+            if !favoritePhotos.isEmpty {
+                let currentPhoto = favoritePhotos[currentPhotoIndex]
+                VStack {
+                    if let nsImage = NSImage(data: currentPhoto.imageData) {
+                        Image(nsImage: nsImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: 500, maxHeight: 350)
+                            .clipped()
+                            .cornerRadius(12)
+                    } else {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(width: 500, height: 350)
+                            .overlay {
+                                Text("No Image")
+                                    .foregroundColor(.gray)
+                            }
                     }
-                Text("Favorite Photo \(favoritesPhotos[currentPhotoIndex])")
-                    .font(.headline)
-                    .padding(.top, 20)
-                Text("Randomly selected from your favorites")
-                    .font(.caption)
-                    .foregroundColor(.gray)
+                    Text(currentPhoto.createDate.formatted(date: .abbreviated, time: .shortened))
+                        .font(.headline)
+                        .padding(.top, 20)
+                    Text("Randomly selected from your favorites")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                .background(
+                    // 使用 Liquid Glass 效果
+                    Color.clear
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                )
+                .padding(20)
+            } else {
+                VStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 500, height: 350)
+                        .overlay {
+                            Text("No favorite photos yet")
+                                .foregroundColor(.gray)
+                        }
+                    Text("Mark photos as favorite to see them here")
+                        .font(.headline)
+                        .padding(.top, 20)
+                }
+                .background(
+                    // 使用 Liquid Glass 效果
+                    Color.clear
+                        .background(.ultraThinMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                )
+                .padding(20)
             }
-            .background(
-                // 使用 Liquid Glass 效果
-                Color.clear
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-            )
-            .padding(20)
             
             Spacer()
             
             // 操作按钮
-            HStack(spacing: 20) {
-                Button(action: { previousPhoto() }) {
-                    HStack {
-                        Image(systemName: "arrow.left")
-                        Text("Previous")
+            if !favoritePhotos.isEmpty {
+                HStack(spacing: 20) {
+                    Button(action: { previousPhoto() }) {
+                        HStack {
+                            Image(systemName: "arrow.left")
+                            Text("Previous")
+                        }
+                        .padding()
+                        .background(
+                            // 使用 Liquid Glass 效果
+                            Color.clear
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        )
                     }
-                    .padding()
-                    .background(
-                        // 使用 Liquid Glass 效果
-                        Color.clear
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    )
-                }
-                
-                Button(action: { nextPhoto() }) {
-                    HStack {
-                        Text("Next")
-                        Image(systemName: "arrow.right")
+                    
+                    Button(action: { nextPhoto() }) {
+                        HStack {
+                            Text("Next")
+                            Image(systemName: "arrow.right")
+                        }
+                        .padding()
+                        .background(
+                            // 使用 Liquid Glass 效果
+                            Color.clear
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        )
                     }
-                    .padding()
-                    .background(
-                        // 使用 Liquid Glass 效果
-                        Color.clear
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    )
-                }
-                
-                Button(action: { shufflePhotos() }) {
-                    HStack {
-                        Image(systemName: "shuffle")
-                        Text("Shuffle")
+                    
+                    Button(action: { shufflePhotos() }) {
+                        HStack {
+                            Image(systemName: "shuffle")
+                            Text("Shuffle")
+                        }
+                        .padding()
+                        .background(
+                            // 使用 Liquid Glass 效果
+                            Color.clear
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        )
                     }
-                    .padding()
-                    .background(
-                        // 使用 Liquid Glass 效果
-                        Color.clear
-                            .background(.ultraThinMaterial)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    )
                 }
+                .padding()
             }
-            .padding()
-        }
-        .onAppear {
-            // 初始化时随机选择一张照片
-            currentPhotoIndex = Int.random(in: 0..<favoritesPhotos.count)
         }
     }
     
     // 显示下一张照片
     func nextPhoto() {
-        currentPhotoIndex = (currentPhotoIndex + 1) % favoritesPhotos.count
+        if !favoritePhotos.isEmpty {
+            currentPhotoIndex = (currentPhotoIndex + 1) % favoritePhotos.count
+        }
     }
     
     // 显示上一张照片
     func previousPhoto() {
-        currentPhotoIndex = (currentPhotoIndex - 1 + favoritesPhotos.count) % favoritesPhotos.count
+        if !favoritePhotos.isEmpty {
+            currentPhotoIndex = (currentPhotoIndex - 1 + favoritePhotos.count) % favoritePhotos.count
+        }
     }
     
     // 随机打乱照片顺序
     func shufflePhotos() {
-        favoritesPhotos.shuffle()
-        currentPhotoIndex = 0
+        if !favoritePhotos.isEmpty {
+            currentPhotoIndex = Int.random(in: 0..<favoritePhotos.count)
+        }
     }
 }
 

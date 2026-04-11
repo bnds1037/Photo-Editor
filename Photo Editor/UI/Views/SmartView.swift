@@ -44,7 +44,7 @@ struct SmartView: View {
                     ScrollView {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 300))], spacing: 20) {
                             ForEach(viewModel.searchResults) { photo in
-                                PhotoCard(photo: photo)
+                                PhotoCard(photo: photo, onToggleFavorite: viewModel.toggleFavorite)
                             }
                         }
                         .padding()

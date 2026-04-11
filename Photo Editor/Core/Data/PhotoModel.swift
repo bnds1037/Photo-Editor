@@ -9,4 +9,5 @@ struct PhotoModel: Identifiable, Codable {
     let albumID: UUID?
     let isBlur: Bool
     let isDuplicate: Bool
+    let isFavorite: Bool
 }

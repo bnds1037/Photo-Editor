@@ -56,4 +56,14 @@ class MainViewModel: ObservableObject {
         photoService.deletePhoto(photo: photo)
         loadData()
     }
+    
+    func uploadPhotos(from fileURLs: [URL]) {
+        photoService.uploadPhotos(from: fileURLs)
+        loadData()
+    }
+    
+    func toggleFavorite(photo: PhotoModel) {
+        photoService.toggleFavorite(photo: photo)
+        loadData()
+    }
 }

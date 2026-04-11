@@ -66,4 +66,22 @@ class SmartViewModel: ObservableObject {
         sceneClassificationResults = []
         duplicatePhotos = []
     }
+    
+    func getTotalPhotos() -> Int {
+        return smartService.getTotalPhotos()
+    }
+    
+    func getTotalAlbums() -> Int {
+        return smartService.getTotalAlbums()
+    }
+    
+    func getFavoritesCount() -> Int {
+        return smartService.getFavoritesCount()
+    }
+    
+    func toggleFavorite(photo: PhotoModel) {
+        let updatedPhoto = smartService.toggleFavorite(photo: photo)
+        // 更新搜索结果中的照片状态
+        searchResults = searchResults.map { $0.id == photo.id ? updatedPhoto : $0 }
+    }
 }

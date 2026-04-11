@@ -7,69 +7,56 @@ class DataManager: ObservableObject {
     @Published var albums: [AlbumModel] = []
     
     private let coreDataStack = CoreDataStack.shared
+    private let userDefaults = UserDefaults.standard
+    private let photosKey = "savedPhotos"
+    private let albumsKey = "savedAlbums"
     
     init() {
-        loadSampleData()
+        loadData()
     }
     
-    func loadSampleData() {
-        // 加载示例数据
-        let samplePhotos = [
-            PhotoModel(
-                id: UUID(),
-                imageData: Data(),
-                createDate: Date(),
-                location: "New York",
-                tags: ["Travel", "City"],
-                albumID: nil,
-                isBlur: false,
-                isDuplicate: false
-            ),
-            PhotoModel(
-                id: UUID(),
-                imageData: Data(),
-                createDate: Date().addingTimeInterval(-86400),
-                location: "Paris",
-                tags: ["Travel", "Landmark"],
-                albumID: nil,
-                isBlur: false,
-                isDuplicate: false
-            ),
-            PhotoModel(
-                id: UUID(),
-                imageData: Data(),
-                createDate: Date().addingTimeInterval(-172800),
-                location: "Tokyo",
-                tags: ["Travel", "City"],
-                albumID: nil,
-                isBlur: false,
-                isDuplicate: false
-            )
-        ]
+    private func loadData() {
+        // 从UserDefaults加载保存的照片数据
+        if let photosData = userDefaults.data(forKey: photosKey),
+           let decodedPhotos = try? JSONDecoder().decode([PhotoModel].self, from: photosData) {
+            photos = decodedPhotos
+        }
         
-        let sampleAlbums = [
-            AlbumModel(
+        // 从UserDefaults加载保存的相册数据
+        if let albumsData = userDefaults.data(forKey: albumsKey),
+           let decodedAlbums = try? JSONDecoder().decode([AlbumModel].self, from: albumsData) {
+            albums = decodedAlbums
+        }
+        
+        // 如果没有相册，创建一个默认相册
+        if albums.isEmpty {
+            let defaultAlbum = AlbumModel(
                 id: UUID(),
                 name: "My Photos",
                 createDate: Date(),
-                photoIDs: samplePhotos.map { $0.id },
-                isSmartAlbum: false
-            ),
-            AlbumModel(
-                id: UUID(),
-                name: "Travel",
-                createDate: Date().addingTimeInterval(-86400),
-                photoIDs: samplePhotos.map { $0.id },
+                photoIDs: [],
                 isSmartAlbum: false
             )
-        ]
+            albums.append(defaultAlbum)
+            saveData()
+        }
+    }
+    
+    private func saveData() {
+        // 保存照片数据到UserDefaults
+        if let encodedPhotos = try? JSONEncoder().encode(photos) {
+            userDefaults.set(encodedPhotos, forKey: photosKey)
+        }
         
-        photos = samplePhotos
-        albums = sampleAlbums
+        // 保存相册数据到UserDefaults
+        if let encodedAlbums = try? JSONEncoder().encode(albums) {
+            userDefaults.set(encodedAlbums, forKey: albumsKey)
+        }
     }
     
     func addPhoto(_ photo: PhotoModel) {
         photos.append(photo)
+        saveData()
     }
     
     func deletePhoto(_ photo: PhotoModel) {
@@ -83,16 +70,19 @@ class DataManager: ObservableObject {
                 }
             }
         }
+        saveData()
     }
     
     func addAlbum(_ album: AlbumModel) {
         albums.append(album)
+        saveData()
     }
     
     func updateAlbum(_ album: AlbumModel) {
         if let index = albums.firstIndex(where: { $0.id == album.id }) {
             albums[index] = album
         }
+        saveData()
     }
     
     func deleteAlbum(_ album: AlbumModel) {
@@ -107,10 +97,30 @@ class DataManager: ObservableObject {
                     tags: photo.tags,
                     albumID: nil,
                     isBlur: photo.isBlur,
-                    isDuplicate: photo.isDuplicate
+                    isDuplicate: photo.isDuplicate,
+                    isFavorite: photo.isFavorite
                 )
             }
             return photo
+        }
+        saveData()
+    }
+    
+    func updatePhoto(_ photo: PhotoModel, with imageData: Data) {
+        if let index = photos.firstIndex(where: { $0.id == photo.id }) {
+            let updatedPhoto = PhotoModel(
+                id: photo.id,
+                imageData: imageData,
+                createDate: photo.createDate,
+                location: photo.location,
+                tags: photo.tags,
+                albumID: photo.albumID,
+                isBlur: photo.isBlur,
+                isDuplicate: photo.isDuplicate,
+                isFavorite: photo.isFavorite
+            )
+            photos[index] = updatedPhoto
+            saveData()
         }
     }
 }

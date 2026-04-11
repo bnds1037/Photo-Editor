@@ -86,4 +86,32 @@ class SmartService {
         
         return duplicates
     }
+    
+    func getTotalPhotos() -> Int {
+        return dataManager.photos.count
+    }
+    
+    func getTotalAlbums() -> Int {
+        return dataManager.albums.count
+    }
+    
+    func getFavoritesCount() -> Int {
+        return dataManager.photos.filter { $0.isFavorite }.count
+    }
+    
+    func toggleFavorite(photo: PhotoModel) -> PhotoModel {
+        let updatedPhoto = PhotoModel(
+            id: photo.id,
+            imageData: photo.imageData,
+            createDate: photo.createDate,
+            location: photo.location,
+            tags: photo.tags,
+            albumID: photo.albumID,
+            isBlur: photo.isBlur,
+            isDuplicate: photo.isDuplicate,
+            isFavorite: !photo.isFavorite
+        )
+        dataManager.photos = dataManager.photos.map { $0.id == photo.id ? updatedPhoto : $0 }
+        return updatedPhoto
+    }
 }

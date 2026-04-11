@@ -2,12 +2,13 @@ import SwiftUI
 
 struct PhotoGridView: View {
     let photos: [PhotoModel]
+    let onToggleFavorite: (PhotoModel) -> Void
     
     var body: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200, maximum: 300))], spacing: 20) {
                 ForEach(photos) { photo in
-                    PhotoCard(photo: photo)
+                    PhotoCard(photo: photo, onToggleFavorite: onToggleFavorite)
                 }
             }
             .padding()
@@ -17,12 +18,13 @@ struct PhotoGridView: View {
 
 struct PhotoTimelineView: View {
     let photos: [PhotoModel]
+    let onToggleFavorite: (PhotoModel) -> Void
     
     var body: some View {
         ScrollView {
             VStack(spacing: 10) {
                 ForEach(photos) { photo in
-                    PhotoRow(photo: photo)
+                    PhotoRow(photo: photo, onToggleFavorite: onToggleFavorite)
                 }
             }
             .padding()

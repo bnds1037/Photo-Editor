@@ -16,9 +16,9 @@ struct MainView: View {
             
             // 主内容区域
             if viewModel.isGridView {
-                PhotoGridView(photos: viewModel.searchPhotos())
+                PhotoGridView(photos: viewModel.searchPhotos(), onToggleFavorite: { viewModel.toggleFavorite(photo: $0) })
             } else {
-                PhotoTimelineView(photos: viewModel.searchPhotos())
+                PhotoTimelineView(photos: viewModel.searchPhotos(), onToggleFavorite: { viewModel.toggleFavorite(photo: $0) })
             }
             
             // 底部栏
